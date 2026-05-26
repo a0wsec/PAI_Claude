@@ -106,10 +106,24 @@ rm -rf "$CLONE_DIR"
 
 # ─── Step 6: Shell config ───────────────────────────────────
 BUN_EXPORT='export PATH="$HOME/.bun/bin:$PATH"'
+PAI_ALIAS='alias pai="claude"'
+PAI_EXPORT='export PAI_DIR="'"$PAI_DIR"'"'
 for rc in "$HOME/.zshenv" "$HOME/.zprofile" "$HOME/.zshrc" "$HOME/.bashrc"; do
   touch "$rc" 2>/dev/null || true
   grep -q '.bun/bin' "$rc" 2>/dev/null || echo "$BUN_EXPORT" >> "$rc"
+  grep -q 'alias pai=' "$rc" 2>/dev/null || echo "$PAI_ALIAS" >> "$rc"
+  grep -q 'PAI_DIR' "$rc" 2>/dev/null || echo "$PAI_EXPORT" >> "$rc"
 done
+# Also create pai wrapper script in PATH
+if [ -d /usr/local/bin ] && [ ! -f /usr/local/bin/pai ]; then
+  cat > /usr/local/bin/pai << 'PAISH'
+#!/bin/bash
+export PAI_DIR="${PAI_DIR:-$HOME/.claude/PAI}"
+exec claude "$@"
+PAISH
+  chmod +x /usr/local/bin/pai
+  ok "pai wrapper installed to /usr/local/bin/pai"
+fi
 
 # ─── Step 7: Claude Code config ─────────────────────────────
 # Setup OAuth si pas configure
