@@ -1,95 +1,116 @@
-# PAI + Claude Code — Docker Starter
+# PAI + Claude Code — Docker/Exegol Starter
 
-> PAI (Personal AI Infrastructure) + Claude Code CLI dans n'importe quel container Docker/Exegol.
-> Skills, hooks, algorithm, documentation — pret a l'emploi.
+PAI (Personal AI Infrastructure) + Claude Code dans n'importe quel container Debian.
+45+ skills, hooks, Algorithm v6.3.0 — operationnel en 2 minutes.
 
-## One-liner
+---
+
+## One-Line
 
 ```bash
-apt-get update -qq && apt-get install -y -qq curl git unzip python3 sshpass nmap zsh && curl -fsSL https://bun.sh/install | bash && export PATH="$HOME/.bun/bin:$PATH" && ln -sf "$HOME/.bun/bin/bun" /usr/local/bin/bun && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y -qq nodejs && npm install -g @anthropic-ai/claude-code && git clone https://github.com/a0wsec/PAI_Claude.git /tmp/PAI_Claude && mkdir -p ~/.claude && cp -r /tmp/PAI_Claude/* ~/.claude/ && cp -r /tmp/PAI_Claude/.* ~/.claude/ 2>/dev/null; rm -rf /tmp/PAI_Claude && echo "export PATH=\$HOME/.bun/bin:\$PATH" >> ~/.bashrc && echo "export PAI_DIR=\$HOME/.claude/PAI" >> ~/.bashrc && echo "alias pai='claude'" >> ~/.bashrc && ln -sf /usr/local/bin/claude /usr/local/bin/pai 2>/dev/null; echo '#!/bin/bash' > /usr/local/bin/pai && echo 'exec claude "$@"' >> /usr/local/bin/pai && chmod +x /usr/local/bin/pai
+curl -sL https://raw.githubusercontent.com/a0wsec/PAI_Claude/main/pai-docker-install.sh | bash
 ```
 
-## Demarrer
+---
+
+## Step by Step
+
+### 1. System dependencies
 
 ```bash
-# Option 1: commande pai
+apt-get update -qq && apt-get install -y -qq curl git unzip python3 sshpass nmap zsh
+```
+
+### 2. Bun runtime
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+export PATH="$HOME/.bun/bin:$PATH"
+ln -sf "$HOME/.bun/bin/bun" /usr/local/bin/bun
+```
+
+### 3. Node 22 + Claude Code
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt-get install -y -qq nodejs
+npm install -g @anthropic-ai/claude-code
+```
+
+### 4. PAI framework (skills, hooks, algorithm)
+
+```bash
+git clone https://github.com/a0wsec/PAI_Claude.git /tmp/PAI_Claude
+mkdir -p ~/.claude
+cp -r /tmp/PAI_Claude/* ~/.claude/
+cp -r /tmp/PAI_Claude/.* ~/.claude/ 2>/dev/null
+rm -rf /tmp/PAI_Claude
+```
+
+### 5. Shell config
+
+```bash
+echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
+echo 'export PAI_DIR="$HOME/.claude/PAI"' >> ~/.bashrc
+echo 'alias pai="claude"' >> ~/.bashrc
+cat > /usr/local/bin/pai << 'EOF'
+#!/bin/bash
+exec claude "$@"
+EOF
+chmod +x /usr/local/bin/pai
+```
+
+### 6. Lance
+
+```bash
+source ~/.bashrc
 pai
-# → Lance Claude Code avec le system prompt PAI
-
-# Option 2: claude direct
-claude
-# → Lance Claude Code standard
-
-# Option 3: dans un dossier specifique
-cd /workspace && pai
+# Premier lancement → OAuth → suis le lien → pret
 ```
 
-## Premier lancement
+---
 
-La premiere fois, Claude Code demande l'auth OAuth:
-
-```
-1. Lance 'claude' ou 'pai'
-2. Suis le lien OAuth dans le terminal
-3. Accepte sur le navigateur
-4. Le terminal est pret
-```
-
-Alternative: utiliser une API key
+## Apres installation
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-pai
+pai              # lancer Claude Code avec PAI
+pai /workspace   # lancer dans un dossier specifique
+claude           # Claude Code sans le system prompt PAI
 ```
 
-## Skills disponibles
-
-Une fois lance, les 45+ skills sont directement utilisables:
+### Skills
 
 ```
-/RedTeam <cible>           # Analyse adverse d'un argument/plan
-/ISA                        # Ideal State Artifact — spec de tache
-/Science                    # Methode scientifique (hypothese → experience)
-/FirstPrinciples            # Deconstruction par principes premiers
-/ContextSearch              # Recherche dans les sessions precedentes
-/Interceptor                # Browser automation (verification UI)
-/BeCreative                 # Ideation divergente
-/Council                    # Debat multi-agent
-/RootCauseAnalysis          # Analyse de cause racine (5 Whys, Fishbone)
-/CreateCLI                  # Generer un CLI TypeScript
-/Migrate                    # Importer du contenu externe
-/Interview                  # Interview conversational (TELOS, preferences)
-/PAIUpgrade                 # Scanner les sources pour des upgrades PAI
+/RedTeam <cible>      /RootCauseAnalysis     /FirstPrinciples
+/ISA                  /Science               /BeCreative
+/Council              /CreateCLI             /ContextSearch
+/Interceptor          /Interview             /Migrate
 ```
 
-## Modes de l'Algorithme
+### Modes
 
-| Mode | Usage |
-|------|-------|
-| `/e1` | Standard — taches simples (<90s) |
-| `/e2` | Extended — qualite elevee (3min) |
-| `/e3` | Advanced — multi-fichier substantiel (10min) |
-| `/e4` | Deep — architecture, cross-cutting (30min) |
-| `/e5` | Comprehensive — pas de limite de temps |
+```
+/e1   Standard (<90s)      /e4   Deep (30min)
+/e2   Extended (3min)      /e5   Comprehensive (2h+)
+/e3   Advanced (10min)
+```
 
 ## Structure
 
 ```
 ~/.claude/
-├── CLAUDE.md              # Config principale + mode detection
-├── skills/                # 45+ skills (ISA, RedTeam, Interceptor, Art...)
+├── CLAUDE.md           # Config + mode detection
+├── skills/             # 45+ skills
 ├── PAI/
-│   ├── ALGORITHM/         # Algorithm v6.3.0 + capabilities
-│   ├── DOCUMENTATION/     # Docs architecture, skills, hooks...
+│   ├── ALGORITHM/      # Algorithm v6.3.0
+│   ├── DOCUMENTATION/  # Docs architecture
 │   └── PAI_SYSTEM_PROMPT.md
-├── hooks/                 # Hooks PAI (ISASync, SecurityPipeline...)
-└── pai-docker-install.sh  # Script d'installation
+├── hooks/              # ISASync, SecurityPipeline...
+└── pai-docker-install.sh
 ```
 
-## Mise a jour
+## Update
 
 ```bash
-cd /tmp && git clone https://github.com/a0wsec/PAI_Claude.git
-cd PAI_Claude && bash pai-docker-install.sh
-# → Met a jour les skills + hooks sans toucher a la config existante
+curl -sL https://raw.githubusercontent.com/a0wsec/PAI_Claude/main/pai-docker-install.sh | bash
 ```
