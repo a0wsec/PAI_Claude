@@ -77,6 +77,7 @@ rm -rf "$CLONE_DIR" 2>/dev/null || true
 git clone --depth 1 "$PAI_REPO" "$CLONE_DIR" 2>&1 | tail -1
 
 # Copier les skills TOUJOURS (meme si PAI existe deja)
+mkdir -p "$PAI_DIR"
 if [ -d "$CLONE_DIR/skills" ]; then
   if [ "$FORCE_SKILLS" = "1" ]; then
     rm -rf "$PAI_DIR/skills" 2>/dev/null || true
