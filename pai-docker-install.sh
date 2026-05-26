@@ -126,7 +126,19 @@ PAISH
   ok "pai wrapper installed to /usr/local/bin/pai"
 fi
 
-# ─── Step 7: Claude Code config ─────────────────────────────
+# ─── Step 7: PAI Setup Wizard ──────────────────────────────
+if [ -f "$PAI_DIR/PAI/PAI-Install/main.ts" ] && [ -z "${PAI_SKIP_WIZARD:-}" ]; then
+  if [ -r /dev/tty ]; then
+    info "Lancement du setup PAI (nom du DA, principal)..."
+    cd "$PAI_DIR/PAI/PAI-Install"
+    bun run main.ts --mode cli 2>/dev/null || warn "Wizard skipped (erreur ou pas de TTY)"
+    cd - > /dev/null
+  else
+    info "Pas de TTY — skip wizard. Pour configurer:  cd ~/.claude/PAI/PAI-Install && bun run main.ts --mode cli"
+  fi
+fi
+
+# ─── Step 8: Claude Code auth ─────────────────────────────
 # Setup OAuth si pas configure
 if [ ! -f "$HOME/.claude.json" ] && [ -z "${ANTHROPIC_API_KEY:-}" ]; then
   warn "Pas d'auth Claude Code detectee."
