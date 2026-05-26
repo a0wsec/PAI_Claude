@@ -7,9 +7,10 @@
 set -euo pipefail
 
 # ─── Config (modifie si besoin) ────────────────────────────
-PAI_REPO="${PAI_REPO:-https://github.com/danielmiessler/PAI.git}"
+PAI_REPO="${PAI_REPO:-https://github.com/a0wsec/PAI_Claude.git}"
 PAI_DIR="${PAI_DIR:-$HOME/.claude}"
 CLAUDE_CODE_VERSION="${CLAUDE_CODE_VERSION:-latest}"  # "latest" ou version specifique
+FORCE_SKILLS="${FORCE_SKILLS:-1}"  # 1 = toujours rafraichir les skills
 
 # ─── Colors ────────────────────────────────────────────────
 R='\033[0m'; B='\033[1;34m'; G='\033[1;32m'; Y='\033[1;33m'; RED='\033[1;31m'
@@ -67,28 +68,41 @@ else
   ok "Claude Code installed"
 fi
 
-# ─── Step 5: Clone PAI (si pas deja la) ────────────────────
-if [ -d "$PAI_DIR/PAI" ]; then
-  ok "PAI already present in $PAI_DIR"
-else
-  info "Installing PAI framework..."
+# ─── Step 5: Clone/Update PAI + Skills ──────────────────────
+info "Syncing PAI framework + skills..."
 
-  # Si on est dans le repo PAI deja (bundle local), on copie
-  if [ -f "$(dirname "$0")/install.sh" ] && [ -d "$(dirname "$0")/PAI" ]; then
-    info "Local PAI bundle detected — copying..."
-    cp -r "$(dirname "$0")"/* "$PAI_DIR/" 2>/dev/null || true
-    cp -r "$(dirname "$0")"/.* "$PAI_DIR/" 2>/dev/null || true
-  else
-    # Sinon on clone
-    info "Cloning PAI from git..."
-    git clone "$PAI_REPO" /tmp/PAI-clone 2>&1 | tail -1
-    mkdir -p "$PAI_DIR"
-    cp -r /tmp/PAI-clone/* "$PAI_DIR/" 2>/dev/null || true
-    cp -r /tmp/PAI-clone/.* "$PAI_DIR/" 2>/dev/null || true
-    rm -rf /tmp/PAI-clone
+# Toujours cloner le repo pour avoir les skills a jour
+CLONE_DIR="/tmp/PAI_Claude_clone"
+rm -rf "$CLONE_DIR" 2>/dev/null || true
+git clone --depth 1 "$PAI_REPO" "$CLONE_DIR" 2>&1 | tail -1
+
+# Copier les skills TOUJOURS (meme si PAI existe deja)
+if [ -d "$CLONE_DIR/skills" ]; then
+  if [ "$FORCE_SKILLS" = "1" ]; then
+    rm -rf "$PAI_DIR/skills" 2>/dev/null || true
   fi
-  ok "PAI framework copied to $PAI_DIR"
+  cp -r "$CLONE_DIR/skills" "$PAI_DIR/skills"
+  SKILL_COUNT=$(find "$PAI_DIR/skills" -name "SKILL.md" -maxdepth 2 | wc -l)
+  ok "$SKILL_COUNT skills installed to $PAI_DIR/skills/"
 fi
+
+# Copier le reste du framework PAI (hooks, algo, docs, CLAUDE.md)
+if [ ! -d "$PAI_DIR/PAI/ALGORITHM" ] || [ "$FORCE_SKILLS" = "1" ]; then
+  mkdir -p "$PAI_DIR"
+  # Copier tout SAUF les skills (deja fait) et le .git
+  for item in "$CLONE_DIR"/* "$CLONE_DIR"/.[!.]* "$CLONE_DIR"/..?*; do
+    [ -e "$item" ] || continue
+    base=$(basename "$item")
+    [ "$base" = "skills" ] && continue
+    [ "$base" = ".git" ] && continue
+    cp -r "$item" "$PAI_DIR/" 2>/dev/null || true
+  done
+  ok "PAI framework synced to $PAI_DIR"
+else
+  ok "PAI framework already present (use FORCE_SKILLS=0 to skip skills refresh)"
+fi
+
+rm -rf "$CLONE_DIR"
 
 # ─── Step 6: Shell config ───────────────────────────────────
 BUN_EXPORT='export PATH="$HOME/.bun/bin:$PATH"'
@@ -113,6 +127,7 @@ echo "  ╔═══════════════════════
 echo "  ║            INSTALLATION TERMINEE                     ║"
 echo "  ╠══════════════════════════════════════════════════════╣"
 echo "  ║  PAI:     $PAI_DIR"
+echo "  ║  Skills:  $(find "$PAI_DIR/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l) skills"
 echo "  ║  Claude:  $(which claude 2>/dev/null || echo 'PATH?')"
 echo "  ║  Bun:     $(which bun 2>/dev/null || echo 'PATH?')"
 echo "  ║  Shell:   $(basename "$SHELL")"
