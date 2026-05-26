@@ -63,7 +63,7 @@ export function generateSettingsJson(config: PAIConfig): Record<string, any> {
     },
 
     pai: {
-      repoUrl: "https://github.com/danielmiessler/PAI",
+      repoUrl: "https://github.com/a0wsec/PAI_Claude",
       version: PAI_VERSION,
       algorithmVersion: ALGORITHM_VERSION,
     },

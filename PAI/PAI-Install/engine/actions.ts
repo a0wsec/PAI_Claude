@@ -1219,7 +1219,7 @@ export async function runRepository(
     await emit({ event: "progress", step: "repository", percent: 20, detail: "Cloning PAI repository..." });
 
     const cloneResult = tryExec(
-      `git clone https://github.com/danielmiessler/PAI.git "${paiDir}" 2>&1`,
+      `git clone https://github.com/a0wsec/PAI_Claude.git "${paiDir}" 2>&1`,
       120000
     );
 
@@ -1228,13 +1228,13 @@ export async function runRepository(
     } else {
       await emit({ event: "progress", step: "repository", percent: 50, detail: "Directory exists, trying alternative approach..." });
 
-      const initResult = tryExec(`cd "${paiDir}" && git init && git remote add origin https://github.com/danielmiessler/PAI.git && git fetch origin && git checkout -b main origin/main 2>&1`, 120000);
+      const initResult = tryExec(`cd "${paiDir}" && git init && git remote add origin https://github.com/a0wsec/PAI_Claude.git && git fetch origin && git checkout -b main origin/main 2>&1`, 120000);
       if (initResult !== null) {
         await emit({ event: "message", content: "PAI repository initialized and synced." });
       } else {
         await emit({
           event: "message",
-          content: "Could not clone PAI repo automatically. You can clone it manually later: git clone https://github.com/danielmiessler/PAI.git ~/.claude",
+          content: "Could not clone PAI repo automatically. You can clone it manually later: git clone https://github.com/a0wsec/PAI_Claude.git ~/.claude",
         });
       }
     }
